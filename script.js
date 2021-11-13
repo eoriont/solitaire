@@ -82,10 +82,12 @@ function draw() {
     if (mouseIsPressed) {
         if (!cursorCard) {
             // TODO: Fix dragging unrevealed cards
-            card.dragging = true
-            cursorCard = card
-            cursorCardPile = pile;
-            cursorArea = mouseArea;
+            if (card.revealed) {
+                card.dragging = true
+                cursorCard = card
+                cursorCardPile = pile;
+                cursorArea = mouseArea;
+            }
         }
     } else {
         if (cursorCard) {
