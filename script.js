@@ -51,7 +51,6 @@ function draw() {
         }
     }
 
-
     let pile = constrain(Math.floor(mouseX / (cardWidth + cardPaddingX)), 0, 6)
     let layer = constrain(Math.floor(mouseY / cardPaddingY), 0, piles[pile].length - 1)
     let card = piles[pile][layer]
@@ -65,7 +64,7 @@ function draw() {
         if (cursorCard) {
             let ccPile = piles[cursorCardPile]
             // Drop card
-            if (doesCardFitOnPile(cursorCard, card)) {
+            if (doesCardFitOnPile(cursorCard, card) || (piles[pile].length == 0 && cursorCard.number == 13)) {
                 let cards = popCard(cursorCardPile, cursorCard);
                 piles[pile] = piles[pile].concat(cards)
                 if (ccPile.length >= 1) {
@@ -92,7 +91,11 @@ function drawCard(card, x, y) {
     if (card.revealed) {
         fill('azure')
         rect(x, y, cardWidth, cardHeight);
+
         fill('black')
+        if (["D", "H"].includes(getSuit(card))) {
+            fill("red")
+        }
         textSize(16);
         textAlign(LEFT);
         text(enLang(card), x + 2, y + 15)
@@ -145,6 +148,7 @@ function drawCard(card, x, y) {
 }
 
 function doesCardFitOnPile(newCard, oldCard) {
+    if (!oldCard) return false;
     // true: red, false: black
     let oldCol = [0, 2].includes(oldCard.suit)
     let newCol = [0, 2].includes(newCard.suit)
