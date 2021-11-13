@@ -11,7 +11,12 @@ var cardHeight = 70;
 var cardPaddingX = 10;
 var cardPaddingY = 20;
 
+let score, moves;
+
 function setup() {
+    score = 0;
+    moves = 0;
+
     for (let i = 0; i < 13; i++) {
         for (let j = 0; j < 4; j++) {
             deck.push({
@@ -131,6 +136,8 @@ function draw() {
                     if (ccPile.length >= 1) {
                         ccPile[ccPile.length - 1].revealed = true
                     }
+                    moves++;
+                    score+=10
                 }
             } else if (mouseArea == "acePiles" && cursorArea == "piles") {
                 if (doesCardFitOnAcePile(cursorCard, card)
@@ -141,11 +148,15 @@ function draw() {
                     if (ccPile.length >= 1) {
                         ccPile[ccPile.length - 1].revealed = true
                     }
+                    moves++;
+                    score+=10
                 }
             } else if (mouseArea == "piles" && cursorArea == "acePiles") {
                 if (doesCardFitOnPile(cursorCard, card)) {
                     piles[pile].push(cursorCard)
                     ccAcePile.pop();
+                    moves++;
+                    score+=10
                 }
             } else if (mouseArea == "acePiles" && cursorArea == "acePiles") {
                 if (acePiles[pile].length == 0 && cursorCard.number == 1) {
@@ -154,11 +165,15 @@ function draw() {
                     if (ccPile.length >= 1) {
                         ccPile[ccPile.length - 1].revealed = true
                     }
+                    moves++;
+                    score+=10
                 }
             } else if (mouseArea == "piles" && cursorArea == "deck") {
-                if (doesCardFitOnPile(cursorCard, card)) {
+                if (doesCardFitOnPile(cursorCard, card) || (piles[pile].length == 0 && cursorCard.number == 13)) {
                     piles[pile].push(cursorCard)
                     deckFlippedPile.pop()
+                    moves++;
+                    score+=10
                 }
             } else if (mouseArea == "acePiles" && cursorArea == "deck") {
                 if (doesCardFitOnAcePile(cursorCard, card)
@@ -166,6 +181,8 @@ function draw() {
                     // TODO: check if card pile only is 1 card
                     acePiles[pile].push(cursorCard);
                     deckFlippedPile.pop()
+                    moves++;
+                    score+=10
                 }
             }
             cursorCard.dragging = false
@@ -174,6 +191,16 @@ function draw() {
             cursorArea = null;
         }
     }
+
+    fill("black")
+    stroke("black")
+    textSize(20)
+    textAlign(LEFT)
+    text(`Time: ${Math.floor(millis()/1000)}`, (cardWidth+cardPaddingX)*4,height-cardHeight+15)
+    text(`Score: ${score}`, (cardWidth+cardPaddingX)*4,height-cardHeight+35)
+    text(`Moves: ${moves}`, (cardWidth+cardPaddingX)*4,height-cardHeight+55)
+
+
 }
 
 function getSuit(card) {
