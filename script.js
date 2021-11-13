@@ -1,7 +1,9 @@
 let deck = [];
 let piles = [[], [], [], [], [], [], []];
+let acePiles = [[], [], [], []];
 let cursorCard;
 let cursorCardPile;
+let cursorArea;
 
 var cardWidth = 50;
 var cardHeight = 70;
@@ -51,29 +53,80 @@ function draw() {
         }
     }
 
-    let pile = constrain(Math.floor(mouseX / (cardWidth + cardPaddingX)), 0, 6)
-    let layer = constrain(Math.floor(mouseY / cardPaddingY), 0, piles[pile].length - 1)
-    let card = piles[pile][layer]
+    for (let i = 0; i < acePiles.length; i++) {
+        fill('white')
+        rect(i * (cardWidth + cardPaddingX), height - cardHeight, cardWidth, cardHeight)
+        for (let j = 0; j < acePiles[i].length; j++) {
+            let card = acePiles[i][j]
+            if (!card.dragging) {
+                drawCard(card, i * (cardWidth + cardPaddingX), height - cardHeight);
+            } else {
+                drawCard(card, mouseX, mouseY);
+            }
+        }
+    }
+
+    let mouseArea, pile, layer, card;
+    // If mouse is in top left square
+    if (mouseX < 7*(cardPaddingX+cardWidth) && mouseY < height - cardHeight) {
+        mouseArea = "piles";
+        pile = constrain(Math.floor(mouseX / (cardWidth + cardPaddingX)), 0, piles.length-1)
+        layer = constrain(Math.floor(mouseY / cardPaddingY), 0, piles[pile].length - 1)
+        card = piles[pile][layer]
+    } else if (mouseY > height - cardHeight) {
+        mouseArea = "acePiles";
+        pile = constrain(Math.floor(mouseX / (cardWidth + cardPaddingX)), 0, acePiles.length-1)
+        card = acePiles[pile][acePiles[pile].length-1]
+    }
+
     if (mouseIsPressed) {
         if (!cursorCard) {
+            // TODO: Fix dragging unrevealed cards
             card.dragging = true
             cursorCard = card
             cursorCardPile = pile;
+            cursorArea = mouseArea;
         }
     } else {
         if (cursorCard) {
-            let ccPile = piles[cursorCardPile]
             // Drop card
-            if (doesCardFitOnPile(cursorCard, card) || (piles[pile].length == 0 && cursorCard.number == 13)) {
-                let cards = popCard(cursorCardPile, cursorCard);
-                piles[pile] = piles[pile].concat(cards)
-                if (ccPile.length >= 1) {
-                    ccPile[ccPile.length - 1].revealed = true
+            let ccPile = piles[cursorCardPile]
+            let ccAcePile = acePiles[cursorCardPile]
+            if (mouseArea == "piles" && cursorArea == "piles") {
+                if (doesCardFitOnPile(cursorCard, card) || (piles[pile].length == 0 && cursorCard.number == 13)) {
+                    let cards = popCard(cursorCardPile, cursorCard);
+                    piles[pile] = piles[pile].concat(cards)
+                    if (ccPile.length >= 1) {
+                        ccPile[ccPile.length - 1].revealed = true
+                    }
+                }
+            } else if (mouseArea == "acePiles" && cursorArea == "piles") {
+                if (doesCardFitOnAcePile(cursorCard, card)
+                    || (acePiles[pile].length == 0 && cursorCard.number == 1)) {
+                    // TODO: check if card pile only is 1 card
+                    acePiles[pile].push(cursorCard);
+                    ccPile.pop()
+                    if (ccPile.length >= 1) {
+                        ccPile[ccPile.length - 1].revealed = true
+                    }
+                }
+            } else if (mouseArea == "piles" && cursorArea == "acePiles") {
+                if (doesCardFitOnPile(cursorCard, card)) {
+                    piles[pile].push(cursorCard)
+                }
+            } else if (mouseArea == "acePiles" && cursorArea == "acePiles") {
+                if (acePiles[pile].length == 0 && cursorCard.number == 1) {
+                    acePiles[pile].push(cursorCard);
+                    ccAcePile.pop()
+                    if (ccPile.length >= 1) {
+                        ccPile[ccPile.length - 1].revealed = true
+                    }
                 }
             }
             cursorCard.dragging = false
             cursorCard = null;
             cursorCardPile = null;
+            cursorArea = null;
         }
     }
 }
@@ -88,7 +141,7 @@ function getSuit(card) {
 }
 
 function drawCard(card, x, y) {
-    if (card.revealed) {
+    if (card.revealed || keyIsDown(32)) {
         fill('azure')
         rect(x, y, cardWidth, cardHeight);
 
@@ -181,4 +234,10 @@ function enLang(card) {
         12: "Q",
         13: "K"
     }[card.number];
+}
+
+function doesCardFitOnAcePile(newCard, oldCard) {
+    if (!oldCard) return false;
+    if (newCard.suit != oldCard.suit) return false;
+    return newCard.number == oldCard.number + 1
 }
