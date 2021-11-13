@@ -44,7 +44,8 @@ function setup() {
         card.revealed = true
     }
 
-    createCanvas(500, 500)
+    let c = createCanvas(500, 500)
+    document.getElementById("markdown").appendChild(c.elt)
 }
 
 function draw() {

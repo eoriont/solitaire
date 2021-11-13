@@ -5,12 +5,154 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>oriont.net > Solitaire</title>
 </head>
 
 <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.10.2/p5.js"></script>
-    <script src="script.js"></script>
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>oriont > Solitaire</title>
+  <meta name="author" content="Elijah Tarr" />
+  <meta name="description" content="oriont's posts" />
+  <meta name="keywords" content="coding,programming" />
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+
+  <!--Replace with your tailwind.css once created-->
+  <!-- Template source: https://www.tailwindtoolbox.com/ -->
+
+  <link rel="stylesheet" href="//oriont.net/assets/css/style.css">
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-YW05BX01LE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-YW05BX01LE');
+  </script> -->
+</head>
+
+<body class="bg-gray-100 leading-normal tracking-normal">
+
+<nav id="header" class="fixed w-full z-10 top-0 bg-white shadow">
+
+  <!-- <div id="progress" class="h-1 z-20 top-0" style="background:linear-gradient(to right, #4dc0b5 var(--scroll), transparent 0);"></div> -->
+
+  <div class="w-full md:max-w-4xl mx-auto flex flex-wrap items-center justify-between mt-0 py-3">
+
+    <div class="pl-4">
+      <a class="text-gray-900 text-base no-underline hover:no-underline font-extrabold text-xl" href="//oriont.net">
+        oriont
+      </a>
+    </div>
+
+    <div class="block lg:hidden pr-4">
+      <button id="nav-toggle" class="flex items-center px-3 py-2 border rounded text-gray-500 border-gray-600 hover:text-gray-900 hover:border-green-500 appearance-none focus:outline-none">
+        <svg class="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <title>Menu</title>
+          <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block mt-2 lg:mt-0 bg-gray-100 md:bg-transparent z-20" id="nav-content">
+      <ul class="list-reset lg:flex justify-end flex-1 items-center">
+        <li class="mr-4">
+          <a class="inline-block py-2 px-4 text-gray-900 font-bold no-underline" href="//oriont.net">Home</a>
+        </li>
+        <li class="mr-4">
+          <a class="inline-block text-gray-600 no-underline hover:text-gray-900 hover:text-underline py-2 px-4" href="//oriont.net/posts">Posts</a>
+        </li>
+        <li class="mr-4">
+          <a class="inline-block text-gray-600 no-underline hover:text-gray-900 hover:text-underline py-2 px-4" href="//oriont.net/series">Series</a>
+        </li>
+        <li class="mr-4">
+          <a class="inline-block text-gray-600 no-underline hover:text-gray-900 hover:text-underline py-2 px-4" href="//oriont.net/about">About</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+	<!--Container-->
+	<div class="container w-full md:max-w-3xl mx-auto pt-20">
+
+		<div class="w-full px-4 md:px-6 text-xl text-gray-800 leading-normal" style="font-family: Georgia, serif;">
+
+			<!--Title-->
+			<div class="">
+          <p class="text-base md:text-sm text-green-500 font-bold">&lt; <a href="//oriont.net/posts" class="text-base md:text-sm text-green-500 font-bold no-underline hover:underline">Back to posts</a></p>
+        <h1 class="font-bold break-normal text-gray-900 pt-6 pb-2 text-3xl md:text-4xl">Solitaire</h1>
+			</div>
+
+
+			<!--Post Content-->
+
+      <div id="markdown">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.10.2/p5.js"></script>
+        <script src="script.js"></script>
+      </div>
+
+			<!-- / Post Content -->
+
+		</div>
+
+    <br>
+
+	</div>
+	<!--/container-->
+
+<footer class="bg-white border-t border-gray-400 shadow">
+  <div class="container max-w-4xl mx-auto flex py-8">
+    <div class="w-full mx-auto flex flex-wrap">
+      <div class="flex w-full md:w-1/2 ">
+        <div class="px-8">
+          <h3 class="font-bold text-gray-900">About</h3>
+          <p class="py-4 text-gray-600 text-sm">
+              My name is Elijah Tarr, and I am currently a senior at Tamalpais High School in California.
+              This website is a way for me to present what I do to others. If you see a problem or something you think you can improve, please
+              <a class="font-bold text-green-500" href="//github.com/eoriont/eoriont.github.io/pulls">submit a PR</a> or
+              <a class="font-bold text-green-500" href="//github.com/eoriont/eoriont.github.io/issues">submit an issue!</a>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex w-full md:w-1/2">
+        <div class="px-8">
+          <h3 class="font-bold text-gray-900">Social</h3>
+          <ul class="list-reset items-center text-sm pt-3">
+            <li>
+              <a class="inline-block text-gray-600 no-underline hover:text-gray-900 hover:text-underline py-1" href="//github.com/eoriont">GitHub</a>
+            </li>
+            <li>
+              <a class="inline-block text-gray-600 no-underline hover:text-gray-900 hover:text-underline py-1" href="//www.youtube.com/channel/UCiydtLctNvtvO2ieS_A0eLQ">YouTube</a>
+            </li>
+            <li>
+              <a class="inline-block text-gray-600 no-underline hover:text-gray-900 hover:text-underline py-1" href="//twitch.tv/eoriont">Twitch</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+	<script src="//oriont.net/assets/js/progressbar.js"></script>
+
+  <!-- Assumes that posts have at least 1 tag -->
+  <!-- {% if page.tags.size > 0 or page.markdown %} -->
+    <script src="//oriont.net/assets/js/mdclasses.js"></script>
+  <!-- {% endif %} -->
+
 </body>
 
 </html>
