@@ -1,6 +1,7 @@
 let deck = [];
 let piles = [[], [], [], [], [], [], []];
 let acePiles = [[], [], [], []];
+let deckFlippedPile = [];
 let cursorCard;
 let cursorCardPile;
 let cursorArea;
@@ -34,6 +35,10 @@ function setup() {
         pile[pile.length - 1].revealed = true;
     }
 
+    for (let card of deck) {
+        card.revealed = true
+    }
+
     createCanvas(500, 500)
 }
 
@@ -53,6 +58,7 @@ function draw() {
         }
     }
 
+    // Ace Piles
     for (let i = 0; i < acePiles.length; i++) {
         fill('white')
         rect(i * (cardWidth + cardPaddingX), height - cardHeight, cardWidth, cardHeight)
@@ -66,14 +72,39 @@ function draw() {
         }
     }
 
+    // Deck
+    fill('white')
+    rect(width - cardWidth, 0, cardWidth, cardHeight)
+    if (deck.length > 0) {
+        drawCard({revealed: false}, width - cardWidth, 0)
+    }
+
+    fill('white')
+    rect(width - cardWidth, cardHeight + cardPaddingY, cardWidth, cardHeight)
+    for (let i = 0; i < 3; i++) {
+        let card = deckFlippedPile[deckFlippedPile.length - 3 + i];
+        if (!card) continue
+        if (!card.dragging) {
+            drawCard(card, width - cardWidth, cardHeight+cardPaddingY*(1+i));
+        } else {
+            drawCard(card, mouseX, mouseY);
+        }
+    }
+
     let mouseArea, pile, layer, card;
-    // If mouse is in top left square
-    if (mouseX < 7*(cardPaddingX+cardWidth) && mouseY < height - cardHeight) {
+    if (mouseX > width - cardWidth) {
+        if (mouseY > cardHeight) {
+            mouseArea = "deck";
+            card = deckFlippedPile[deckFlippedPile.length-1]
+        }
+    } else if (mouseY < height - cardHeight) {
+        // If mouse is in top left square
         mouseArea = "piles";
         pile = constrain(Math.floor(mouseX / (cardWidth + cardPaddingX)), 0, piles.length-1)
         layer = constrain(Math.floor(mouseY / cardPaddingY), 0, piles[pile].length - 1)
         card = piles[pile][layer]
     } else if (mouseY > height - cardHeight) {
+        // If mouse is in ace piles area
         mouseArea = "acePiles";
         pile = constrain(Math.floor(mouseX / (cardWidth + cardPaddingX)), 0, acePiles.length-1)
         card = acePiles[pile][acePiles[pile].length-1]
@@ -81,8 +112,7 @@ function draw() {
 
     if (mouseIsPressed) {
         if (!cursorCard) {
-            // TODO: Fix dragging unrevealed cards
-            if (card.revealed) {
+            if (card && card.revealed) {
                 card.dragging = true
                 cursorCard = card
                 cursorCardPile = pile;
@@ -115,6 +145,7 @@ function draw() {
             } else if (mouseArea == "piles" && cursorArea == "acePiles") {
                 if (doesCardFitOnPile(cursorCard, card)) {
                     piles[pile].push(cursorCard)
+                    ccAcePile.pop();
                 }
             } else if (mouseArea == "acePiles" && cursorArea == "acePiles") {
                 if (acePiles[pile].length == 0 && cursorCard.number == 1) {
@@ -123,6 +154,18 @@ function draw() {
                     if (ccPile.length >= 1) {
                         ccPile[ccPile.length - 1].revealed = true
                     }
+                }
+            } else if (mouseArea == "piles" && cursorArea == "deck") {
+                if (doesCardFitOnPile(cursorCard, card)) {
+                    piles[pile].push(cursorCard)
+                    deckFlippedPile.pop()
+                }
+            } else if (mouseArea == "acePiles" && cursorArea == "deck") {
+                if (doesCardFitOnAcePile(cursorCard, card)
+                    || (acePiles[pile].length == 0 && cursorCard.number == 1)) {
+                    // TODO: check if card pile only is 1 card
+                    acePiles[pile].push(cursorCard);
+                    deckFlippedPile.pop()
                 }
             }
             cursorCard.dragging = false
@@ -242,4 +285,15 @@ function doesCardFitOnAcePile(newCard, oldCard) {
     if (!oldCard) return false;
     if (newCard.suit != oldCard.suit) return false;
     return newCard.number == oldCard.number + 1
+}
+
+function mousePressed() {
+    if (mouseX > width - cardWidth && mouseY < cardHeight) {
+        if (deck.length == 0) {
+            deck = reverse(deckFlippedPile);
+            deckFlippedPile = []
+        } else {
+            deckFlippedPile = deckFlippedPile.concat(deck.splice(-3, 3));
+        }
+    }
 }
