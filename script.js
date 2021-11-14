@@ -64,6 +64,9 @@ function setup() {
     score = 0;
     moves = 0;
 
+    cursorCardX = 0;
+    cursorCardY = 0;
+
     // Put canvas in div#markdown
     let c = createCanvas(500, 500);
     document.getElementById("markdown").appendChild(c.elt);
@@ -125,7 +128,8 @@ function handleMouse() {
         cursorCard.dragging = false;
         cursorCard = null;
         cursorCardPile = null;
-        cursorArea = null;
+        cursorCardX = 0;
+        cursorCardY = 0;
     }
 }
 
@@ -324,7 +328,7 @@ class Pile {
                         drawCard(this.cards[this.cards.length - 2], this.x, this.y)
                     }
                     // Add offsets here
-                    drawCard(card, mouseX, mouseY);
+                    drawCard(card, mouseX - cursorCardX, mouseY - cursorCardY);
                 }
             }
             return;
@@ -339,7 +343,7 @@ class Pile {
                 drawCard(card, this.x, this.y + cardPaddingY * i);
             } else {
                 // Add offsets here
-                drawCard(card, mouseX, mouseY);
+                drawCard(card, mouseX - cursorCardX, mouseY - cursorCardY);
             }
         }
     }
@@ -360,11 +364,27 @@ class Pile {
 
     getCursorCard() {
         if (["pile", "3fan"].includes(this.layout)) {
+            // Set card offset
+            if (!cursorCard) {
+                cursorCardX = mouseX - this.x;
+                cursorCardY = mouseY - this.y;
+                if (this.layout == "3fan") {
+                    cursorCardY -= 2 * cardPaddingY;
+                }
+            }
+
             return this.cards.length - 1;
         } else if (this.layout == "fan") {
             let y = mouseY - this.y
             let firstRevealed = this.getFirstRevealedCard();
-            return constrain(Math.floor(y / cardPaddingY), firstRevealed, this.cards.length - 1);
+            let num = constrain(Math.floor(y / cardPaddingY), firstRevealed, this.cards.length - 1);
+
+            if (!cursorCard) {
+                cursorCardX = mouseX - this.x;
+                cursorCardY = y - num * cardPaddingY;
+            }
+
+            return num;
         }
     }
 
