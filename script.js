@@ -1,10 +1,8 @@
-var deck = [];
-var piles = [[], [], [], [], [], [], []];
-var acePiles = [[], [], [], []];
-var deckFlippedPile = [];
-var cursorCard;
-var cursorCardPile;
-var cursorArea;
+var deck;
+var piles = [];
+var acePiles = [];
+var deckFlippedPile;
+var cursorCard, cursorCardPile;
 var cursorCardX, cursorCardY;
 
 const cardWidth = 50;
@@ -30,22 +28,35 @@ function createDeck() {
 }
 
 function setupPiles() {
+    // Make deck (pos/layout don't matter)
+    deck = new Pile(width - cardWidth, 0, "deck");
+    deck.addCards(shuffle(createDeck()));
+
     // Add cards to each pile
-    for (let i = 0; i < piles.length; i++) {
+    for (let i = 0; i < 7; i++) {
+        let x = (cardWidth + cardPaddingX) * i;
+        let pile = new Pile(x, 0, "fan");
         for (let j = 0; j < i + 1; j++) {
-            piles[i].push(deck.pop());
+            pile.addCard(deck.popCard());
         }
+        // Reveal the last card
+        pile.revealLastCard();
+        piles.push(pile);
     }
 
-    // Reveal last card of each pile
-    for (let pile of piles) {
-        pile[pile.length - 1].revealed = true;
+    // Make ace piles
+    for (let i = 0; i < 4; i++) {
+        let x = (cardWidth + cardPaddingX) * i;
+        let pile = new Pile(x, height - cardHeight, "pile");
+        acePiles.push(pile);
     }
 
     // Reveal all cards in the deck
-    for (let card of deck) {
+    for (let card of deck.cards) {
         card.revealed = true
     }
+
+    deckFlippedPile = new Pile(width - cardWidth, cardHeight + cardPaddingY, "3fan");
 }
 
 function setup() {
@@ -53,13 +64,11 @@ function setup() {
     score = 0;
     moves = 0;
 
-    // Make deck
-    deck = shuffle(createDeck());
-    setupPiles()
-
     // Put canvas in div#markdown
-    let c = createCanvas(500, 500)
-    document.getElementById("markdown").appendChild(c.elt)
+    let c = createCanvas(500, 500);
+    document.getElementById("markdown").appendChild(c.elt);
+
+    setupPiles();
 }
 
 function draw() {
@@ -79,102 +88,41 @@ function drawScores() {
 }
 
 function handleMouse() {
-    // Select card that cursor is on
-    let mouseArea, pile, layer, card;
-    if (mouseX > width - cardWidth) {
-        // Deck area
-        if (mouseY > cardHeight) {
-            mouseArea = "deck";
-            card = deckFlippedPile[deckFlippedPile.length - 1];
+    let pile, card;
+    for (let p of [deckFlippedPile, ...piles, ...acePiles]) {
+        if (p.mouseCollision()) {
+            pile = p;
+            card = p.cards[p.getCursorCard()];
         }
-    } else if (mouseY < height - cardHeight) {
-        // Piles
-        mouseArea = "piles";
-        pile = constrain(Math.floor(mouseX / (cardWidth + cardPaddingX)), 0, piles.length - 1)
-        layer = constrain(Math.floor(mouseY / cardPaddingY), 0, piles[pile].length - 1)
-        card = piles[pile][layer]
-    } else if (mouseY > height - cardHeight) {
-        // Ace piles
-        mouseArea = "acePiles";
-        pile = constrain(Math.floor(mouseX / (cardWidth + cardPaddingX)), 0, acePiles.length - 1)
-        card = acePiles[pile][acePiles[pile].length - 1]
     }
 
     // Handle picking up
     if (mouseIsPressed && !cursorCard) {
         if (card && card.revealed) {
-            card.dragging = true
-            cursorCard = card
+            card.dragging = true;
+            cursorCard = card;
             cursorCardPile = pile;
-            cursorArea = mouseArea;
         }
     }
 
     // Handle dropping
     if (!mouseIsPressed && cursorCard) {
-        let ccPile = piles[cursorCardPile]
-        let ccAcePile = acePiles[cursorCardPile]
-        if (mouseArea == "piles" && cursorArea == "piles") {
-            if (doesCardFitOnPile(cursorCard, card)
-                || (piles[pile].length == 0 && cursorCard.number == 13)) {
-                let cards = popCard(cursorCardPile, cursorCard);
-                piles[pile] = piles[pile].concat(cards)
-                if (ccPile.length >= 1) {
-                    ccPile[ccPile.length - 1].revealed = true
-                }
+        if (pile) {
+            if (pile.layout == "fan" && doesCardFitOnPile(cursorCard, card)
+                || pile.layout == "pile" && doesCardFitOnAcePile(cursorCard, card)) {
+                let cards = cursorCardPile.popUntil(cursorCard);
+                pile.addCards(cards);
+                cursorCardPile.revealLastCard();
+
+                // Update score
                 moves++;
-                score += 10
-            }
-        } else if (mouseArea == "acePiles" && cursorArea == "piles") {
-            if (doesCardFitOnAcePile(cursorCard, card)
-                || (acePiles[pile].length == 0 && cursorCard.number == 1)) {
-                // TODO: check if card pile only is 1 card
-                acePiles[pile].push(cursorCard);
-                ccPile.pop()
-                if (ccPile.length >= 1) {
-                    ccPile[ccPile.length - 1].revealed = true
-                }
-                moves++;
-                score += 10
-            }
-        } else if (mouseArea == "piles" && cursorArea == "acePiles") {
-            if (doesCardFitOnPile(cursorCard, card)) {
-                piles[pile].push(cursorCard)
-                ccAcePile.pop();
-                moves++;
-                score += 10
-            }
-        } else if (mouseArea == "acePiles" && cursorArea == "acePiles") {
-            if (acePiles[pile].length == 0 && cursorCard.number == 1) {
-                acePiles[pile].push(cursorCard);
-                ccAcePile.pop()
-                if (ccPile.length >= 1) {
-                    ccPile[ccPile.length - 1].revealed = true
-                }
-                moves++;
-                score += 10
-            }
-        } else if (mouseArea == "piles" && cursorArea == "deck") {
-            if (doesCardFitOnPile(cursorCard, card)
-                || (piles[pile].length == 0 && cursorCard.number == 13)) {
-                piles[pile].push(cursorCard)
-                deckFlippedPile.pop()
-                moves++;
-                score += 10
-            }
-        } else if (mouseArea == "acePiles" && cursorArea == "deck") {
-            if (doesCardFitOnAcePile(cursorCard, card)
-                || (acePiles[pile].length == 0 && cursorCard.number == 1)) {
-                // TODO: check if card pile only is 1 card
-                acePiles[pile].push(cursorCard);
-                deckFlippedPile.pop()
-                moves++;
-                score += 10
+                score += 10;
             }
         }
+        //TODO: Only stacks of 1 can go onto ace pile
 
         // Reset cursor state
-        cursorCard.dragging = false
+        cursorCard.dragging = false;
         cursorCard = null;
         cursorCardPile = null;
         cursorArea = null;
@@ -251,21 +199,13 @@ function drawCard(card, x, y) {
 }
 
 function doesCardFitOnPile(newCard, oldCard) {
-    if (!oldCard) return false;
+    if (!oldCard) return newCard.number == 13;
     // true: red, false: black
     let oldCol = [0, 2].includes(oldCard.suit)
     let newCol = [0, 2].includes(newCard.suit)
 
     if (oldCol == newCol) return false;
     return oldCard.number == newCard.number + 1
-}
-
-function popCard(pile, card) {
-    let cards = []
-    while (cards[cards.length - 1] != card) {
-        cards.push(piles[pile].pop())
-    }
-    return reverse(cards)
 }
 
 function enLang(card) {
@@ -287,18 +227,17 @@ function enLang(card) {
 }
 
 function doesCardFitOnAcePile(newCard, oldCard) {
-    if (!oldCard) return false;
+    if (!oldCard) return newCard.number == 1
     if (newCard.suit != oldCard.suit) return false;
     return newCard.number == oldCard.number + 1
 }
 
 function mousePressed() {
     if (mouseX > width - cardWidth && mouseY < cardHeight) {
-        if (deck.length == 0) {
-            deck = reverse(deckFlippedPile);
-            deckFlippedPile = []
+        if (deck.cards.length == 0) {
+            deck.addCards(deckFlippedPile.popCards(deckFlippedPile.cards.length));
         } else {
-            deckFlippedPile = deckFlippedPile.concat(reverse(deck.splice(-3, 3)));
+            deckFlippedPile.addCards(deck.popCards(3));
         }
     }
 }
@@ -306,52 +245,132 @@ function mousePressed() {
 document.addEventListener("keypress", e => e.preventDefault())
 
 function renderPiles() {
-    background("white")
+    clear();
+
     // Piles
-    for (let i = 0; i < piles.length; i++) {
-        fill('white')
-        rect(i * (cardWidth + cardPaddingX), 0, cardWidth, cardHeight)
-        for (let j = 0; j < piles[i].length; j++) {
-            let card = piles[i][j]
-            if (!card.dragging) {
-                drawCard(card, i * (cardWidth + cardPaddingX), j * cardPaddingY);
-            } else {
-                drawCard(card, mouseX, mouseY);
-            }
-        }
+    for (let pile of piles) {
+        pile.render()
     }
 
     // Ace Piles
-    for (let i = 0; i < acePiles.length; i++) {
+    for (let pile of acePiles) {
+        pile.render()
+    }
+
+    // Deck
+    deck.render();
+
+    // Revealed deck (flipped pile)
+    deckFlippedPile.render();
+
+}
+
+class Pile {
+    constructor(x, y, layout) {
+        this.x = x;
+        this.y = y;
+        this.cards = [];
+        this.layout = layout;
+    }
+
+    addCard(card) {
+        this.cards.push(card);
+    }
+
+    addCards(cards) {
+        this.cards = this.cards.concat(cards);
+    }
+
+    popCard() {
+        return this.cards.pop();
+    }
+
+    popUntil(card) {
+        let cards = []
+        while (cards[cards.length - 1] != card) {
+            cards.push(this.popCard())
+        }
+        return reverse(cards)
+    }
+
+    popCards(n) {
+        return reverse(this.cards.splice(-n, n));
+    }
+
+    revealLastCard() {
+        if (this.cards.length == 0) return
+        this.cards[this.cards.length - 1].revealed = true;
+    }
+
+    render() {
         fill('white')
-        rect(i * (cardWidth + cardPaddingX), height - cardHeight, cardWidth, cardHeight)
-        for (let j = 0; j < acePiles[i].length; j++) {
-            let card = acePiles[i][j]
+        rect(this.x, this.y, cardWidth, cardHeight);
+
+        if (this.layout == "deck") {
+            if (deck.cards.length > 0) {
+                drawCard({ revealed: false }, this.x, this.y)
+            }
+            return;
+        }
+
+        // For piles, just draw the last card if it exists
+        if (this.layout == "pile") {
+            if (this.cards.length > 0) {
+                let card = this.cards[this.cards.length - 1]
+                if (!card.dragging) {
+                    drawCard(card, this.x, this.y)
+                } else {
+                    if (this.cards.length > 1) {
+                        drawCard(this.cards[this.cards.length - 2], this.x, this.y)
+                    }
+                    // Add offsets here
+                    drawCard(card, mouseX, mouseY);
+                }
+            }
+            return;
+        }
+
+        // For fans and 3fans
+        let len = min(this.cards.length, 3)
+        for (let i = 0; i < (this.layout == "3fan" ? len : this.cards.length); i++) {
+            let card = this.cards[this.layout == "3fan" ? this.cards.length - len + i : i]
+            if (!card) debugger;
             if (!card.dragging) {
-                drawCard(card, i * (cardWidth + cardPaddingX), height - cardHeight);
+                drawCard(card, this.x, this.y + cardPaddingY * i);
             } else {
+                // Add offsets here
                 drawCard(card, mouseX, mouseY);
             }
         }
     }
 
-    // Deck
-    fill('white')
-    rect(width - cardWidth, 0, cardWidth, cardHeight)
-    if (deck.length > 0) {
-        drawCard({ revealed: false }, width - cardWidth, 0)
+    mouseCollision() {
+        if (mouseX > this.x && mouseX < this.x + cardWidth
+            && mouseY > this.y) {
+            if (this.layout == "fan") {
+                return mouseY < this.y + cardHeight + cardPaddingY * (this.cards.length - 1);
+            } else if (this.layout == "3fan") {
+                return mouseY < this.y + cardHeight + cardPaddingY * 2;
+            } else if (this.layout == "pile") {
+                return mouseY < this.y + cardHeight;
+            }
+        }
+        return false;
     }
 
-    // Revealed deck (flipped pile)
-    fill('white')
-    rect(width - cardWidth, cardHeight + cardPaddingY, cardWidth, cardHeight)
-    for (let i = 0; i < 3; i++) {
-        let card = deckFlippedPile[deckFlippedPile.length - 3 + i];
-        if (!card) continue
-        if (!card.dragging) {
-            drawCard(card, width - cardWidth, cardHeight + cardPaddingY * (1 + i));
-        } else {
-            drawCard(card, mouseX, mouseY);
+    getCursorCard() {
+        if (["pile", "3fan"].includes(this.layout)) {
+            return this.cards.length - 1;
+        } else if (this.layout == "fan") {
+            let y = mouseY - this.y
+            let firstRevealed = this.getFirstRevealedCard();
+            return constrain(Math.floor(y / cardPaddingY), firstRevealed, this.cards.length - 1);
+        }
+    }
+
+    getFirstRevealedCard() {
+        for (let i = 0; i < this.cards.length; i++) {
+            if (this.cards[i].revealed) return i;
         }
     }
 }
