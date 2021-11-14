@@ -372,5 +372,6 @@ class Pile {
         for (let i = 0; i < this.cards.length; i++) {
             if (this.cards[i].revealed) return i;
         }
+        return 0;
     }
 }
