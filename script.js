@@ -1,16 +1,18 @@
 var deck;
-var piles = [];
-var acePiles = [];
+var piles;
+var acePiles;
 var deckFlippedPile;
 var cursorCard, cursorCardPile;
 var cursorCardX, cursorCardY;
+var buttons;
+var startMillis;
 
 const cardWidth = 50;
 const cardHeight = 70;
 const cardPaddingX = screen.width < 500 ? 0 : 10;
 const cardPaddingY = 20;
 
-let score, moves;
+var score, moves;
 
 function createDeck() {
     let deck = [];
@@ -40,6 +42,7 @@ function setupPiles() {
     deck.addCards(shuffle(createDeck()));
 
     // Add cards to each pile
+    piles = [];
     for (let i = 0; i < 7; i++) {
         let x = (cardWidth + cardPaddingX) * i;
         let pile = new Pile(x, 0, "fan");
@@ -52,6 +55,7 @@ function setupPiles() {
     }
 
     // Make ace piles
+    acePiles = [];
     for (let i = 0; i < 4; i++) {
         let x = (cardWidth + cardPaddingX) * i;
         let pile = new Pile(x, height - cardHeight, "pile");
@@ -60,12 +64,19 @@ function setupPiles() {
 
     // Reveal all cards in the deck
     for (let card of deck.cards) {
-        card.revealed = true
+        card.revealed = true;
     }
 
 }
 
-function setup() {
+function setupButtons() {
+    buttons = [];
+    let restart = new Button(width - 50, height - 50, 50, 50);
+    restart.setClickEvent(startGame);
+    buttons.push(restart);
+}
+
+function startGame() {
     // Setup score
     score = 0;
     moves = 0;
@@ -73,17 +84,31 @@ function setup() {
     cursorCardX = 0;
     cursorCardY = 0;
 
+    startMillis = millis();
+
+    setupPiles();
+    setupButtons();
+}
+
+function setup() {
     // Put canvas in div#markdown
     let c = createCanvas(min(screen.width - 32, 500), 500);
     document.getElementById("markdown").appendChild(c.elt);
 
-    setupPiles();
+    startGame();
 }
 
 function draw() {
     renderPiles();
     handleMouse();
     drawScores();
+    renderButtons();
+}
+
+function renderButtons() {
+    for (let button of buttons) {
+        button.render();
+    }
 }
 
 function drawScores() {
@@ -91,7 +116,7 @@ function drawScores() {
     stroke("black")
     textSize(20)
     textAlign(LEFT)
-    text(`Time: ${Math.floor(millis() / 1000)}`, (cardWidth + cardPaddingX) * 4, height - cardHeight + 15)
+    text(`Time: ${Math.floor((millis() - startMillis) / 1000)}`, (cardWidth + cardPaddingX) * 4, height - cardHeight + 15)
     text(`Score: ${score}`, (cardWidth + cardPaddingX) * 4, height - cardHeight + 35)
     text(`Moves: ${moves}`, (cardWidth + cardPaddingX) * 4, height - cardHeight + 55)
 }
@@ -251,6 +276,11 @@ function mousePressed() {
         }
         moves++;
     }
+    for (let button of buttons) {
+        if (button.mouseCollision()) {
+            button.actuate();
+        }
+    }
 }
 
 document.addEventListener("keypress", e => e.preventDefault())
@@ -400,5 +430,32 @@ class Pile {
             if (this.cards[i].revealed) return i;
         }
         return 0;
+    }
+}
+
+class Button {
+    constructor(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.clicked = null;
+    }
+
+    setClickEvent(f) {
+        this.clicked = f;
+    }
+
+    mouseCollision() {
+        return mouseX > this.x && mouseX < this.x + this.w && mouseY > this.y && mouseY < this.y + this.h;
+    }
+
+    actuate() {
+        this.clicked.bind(this)();
+    }
+
+    render() {
+        fill("#FAD7A0")
+        rect(this.x, this.y, this.w, this.h);
     }
 }
