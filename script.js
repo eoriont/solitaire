@@ -7,7 +7,7 @@ var cursorCardX, cursorCardY;
 
 const cardWidth = 50;
 const cardHeight = 70;
-const cardPaddingX = 10;
+const cardPaddingX = screen.width < 500 ? 0 : 10;
 const cardPaddingY = 20;
 
 let score, moves;
@@ -28,8 +28,15 @@ function createDeck() {
 }
 
 function setupPiles() {
-    // Make deck (pos/layout don't matter)
-    deck = new Pile(width - cardWidth, 0, "deck");
+    // Make deck
+    if (500 > screen.width) {
+        // Mobile
+        deck = new Pile(0, height - 2 * cardHeight - 3 * cardPaddingY, "deck");
+        deckFlippedPile = new Pile(cardWidth + cardPaddingX, height - 2 * cardHeight - 3 * cardPaddingY, "3fan");
+    } else {
+        deck = new Pile(width - cardWidth, 0, "deck");
+        deckFlippedPile = new Pile(width - cardWidth, cardHeight + cardPaddingY, "3fan");
+    }
     deck.addCards(shuffle(createDeck()));
 
     // Add cards to each pile
@@ -56,7 +63,6 @@ function setupPiles() {
         card.revealed = true
     }
 
-    deckFlippedPile = new Pile(width - cardWidth, cardHeight + cardPaddingY, "3fan");
 }
 
 function setup() {
@@ -68,7 +74,7 @@ function setup() {
     cursorCardY = 0;
 
     // Put canvas in div#markdown
-    let c = createCanvas(500, 500);
+    let c = createCanvas(min(screen.width - 32, 500), 500);
     document.getElementById("markdown").appendChild(c.elt);
 
     setupPiles();
@@ -237,12 +243,13 @@ function doesCardFitOnAcePile(newCard, oldCard) {
 }
 
 function mousePressed() {
-    if (mouseX > width - cardWidth && mouseY < cardHeight) {
+    if (deck.mouseCollision()) {
         if (deck.cards.length == 0) {
             deck.addCards(deckFlippedPile.popCards(deckFlippedPile.cards.length));
         } else {
             deckFlippedPile.addCards(deck.popCards(3));
         }
+        moves++;
     }
 }
 
@@ -355,7 +362,7 @@ class Pile {
                 return mouseY < this.y + cardHeight + cardPaddingY * (this.cards.length - 1);
             } else if (this.layout == "3fan") {
                 return mouseY < this.y + cardHeight + cardPaddingY * 2;
-            } else if (this.layout == "pile") {
+            } else if (this.layout == "pile" || this.layout == "deck") {
                 return mouseY < this.y + cardHeight;
             }
         }
