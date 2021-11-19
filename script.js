@@ -12,6 +12,8 @@ const cardHeight = 70;
 const cardPaddingX = screen.width < 500 ? 0 : 10;
 const cardPaddingY = 20;
 
+var won;
+
 var score, moves;
 
 function createDeck() {
@@ -47,6 +49,7 @@ function setupPiles() {
         let x = (cardWidth + cardPaddingX) * i;
         let pile = new Pile(x, 0, "fan");
         for (let j = 0; j < i + 1; j++) {
+            // Comment this out for cheat win
             pile.addCard(deck.popCard());
         }
         // Reveal the last card
@@ -67,11 +70,18 @@ function setupPiles() {
         card.revealed = true;
     }
 
+    // Cheat win
+    // Comment out the normal piles thing
+    // for (let p of acePiles) {
+    //     for (let i = 0; i < 13; i++) {
+    //         p.addCard(deck.popCard())
+    //     }
+    // }
 }
 
 function setupButtons() {
     buttons = [];
-    let restart = new Button(width - 50, height - 50, 50, 50);
+    let restart = new Button(width - 50, height - 50, 50, 50, "Restart");
     restart.setClickEvent(startGame);
     buttons.push(restart);
 }
@@ -85,9 +95,12 @@ function startGame() {
     cursorCardY = 0;
 
     startMillis = millis();
+    won = false;
 
     setupPiles();
     setupButtons();
+
+    loop();
 }
 
 function setup() {
@@ -103,6 +116,10 @@ function draw() {
     handleMouse();
     drawScores();
     renderButtons();
+    won = checkWin();
+    if (won) {
+        winGame();
+    }
 }
 
 function renderButtons() {
@@ -434,12 +451,13 @@ class Pile {
 }
 
 class Button {
-    constructor(x, y, w, h) {
+    constructor(x, y, w, h, text) {
         this.x = x;
         this.y = y;
         this.w = w;
         this.h = h;
         this.clicked = null;
+        this.text = text;
     }
 
     setClickEvent(f) {
@@ -455,7 +473,27 @@ class Button {
     }
 
     render() {
-        fill("#FAD7A0")
+        fill("#FAD7A0");
         rect(this.x, this.y, this.w, this.h);
+        fill("black");
+        textAlign(CENTER);
+        textSize(14);
+        text(this.text, this.x + this.w / 2, this.y + this.h / 2 + 4);
     }
+}
+
+function checkWin() {
+    for (let p of acePiles) {
+        if (p.cards.length != 13) {
+            return false
+        }
+    }
+    return true
+}
+
+function winGame() {
+    fill("green")
+    textSize(50)
+    text("You Win!", width / 2, height / 2);
+    noLoop();
 }
