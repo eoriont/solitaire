@@ -6,6 +6,7 @@ var cursorCard, cursorCardPile;
 var cursorCardX, cursorCardY;
 var buttons;
 var startMillis;
+var moves;
 
 const cardWidth = 50;
 const cardHeight = 70;
@@ -14,7 +15,7 @@ const cardPaddingY = 20;
 
 var won;
 
-var score, moves;
+var score, movesNum;
 
 function createDeck() {
     let deck = [];
@@ -81,15 +82,20 @@ function setupPiles() {
 
 function setupButtons() {
     buttons = [];
-    let restart = new Button(width - 50, height - 50, 50, 50, "Restart");
+    let restart = new Button(width - 50, height - 50, 50, 50, "Restart", "#fa7e75");
     restart.setClickEvent(startGame);
     buttons.push(restart);
+
+    let undo = new Button(width - 110, height - 50, 50, 50, "Undo", "#fcc577");
+    undo.setClickEvent(undoMove);
+    buttons.push(undo);
 }
 
 function startGame() {
     // Setup score
     score = 0;
-    moves = 0;
+    movesNum = 0;
+    moves = [];
 
     cursorCardX = 0;
     cursorCardY = 0;
@@ -122,6 +128,34 @@ function draw() {
     }
 }
 
+function undoMove() {
+    if (moves.length > 0) {
+        let move = moves.pop();
+        let mtype = move.type;
+        if (mtype == "deck") {
+            if (deck.cards.length == 0) {
+                deck.addCards(deckFlippedPile.popCards(deckFlippedPile.cards.length));
+            } else {
+                deck.addCards(deckFlippedPile.popCards(3));
+            }
+        } else if (mtype == "pile") {
+            let cards = move.pile2.popUntil(move.card);
+            if (move.revealed) {
+                move.pile1.revealLastCard(false);
+            }
+            move.pile1.addCards(cards);
+        }
+        movesNum--;
+    }
+}
+
+function makeMove(type, card = null, pile1 = null, pile2 = null, revealed = null) {
+    movesNum++;
+    moves.push({
+        type, card, pile1, pile2, revealed
+    });
+}
+
 function renderButtons() {
     for (let button of buttons) {
         button.render();
@@ -135,7 +169,7 @@ function drawScores() {
     textAlign(LEFT)
     text(`Time: ${Math.floor((millis() - startMillis) / 1000)}`, (cardWidth + cardPaddingX) * 4, height - cardHeight + 15)
     text(`Score: ${score}`, (cardWidth + cardPaddingX) * 4, height - cardHeight + 35)
-    text(`Moves: ${moves}`, (cardWidth + cardPaddingX) * 4, height - cardHeight + 55)
+    text(`Moves: ${movesNum}`, (cardWidth + cardPaddingX) * 4, height - cardHeight + 55)
 }
 
 function handleMouse() {
@@ -164,11 +198,9 @@ function handleMouse() {
                     && cursorCardPile.getUntil(cursorCard).length == 1)) {
                 let cards = cursorCardPile.popUntil(cursorCard);
                 pile.addCards(cards);
-                cursorCardPile.revealLastCard();
+                let revealed = cursorCardPile.revealLastCard();
 
-                // Update score
-                moves++;
-                score += 10;
+                makeMove("pile", cursorCard, cursorCardPile, pile, revealed);
             }
         }
         //TODO: Only stacks of 1 can go onto ace pile
@@ -292,7 +324,7 @@ function mousePressed() {
         } else {
             deckFlippedPile.addCards(deck.popCards(3));
         }
-        moves++;
+        makeMove("deck");
     }
     for (let button of buttons) {
         if (button.mouseCollision()) {
@@ -368,9 +400,12 @@ class Pile {
         return reverse(this.cards.splice(-n, n));
     }
 
-    revealLastCard() {
-        if (this.cards.length == 0) return
-        this.cards[this.cards.length - 1].revealed = true;
+    revealLastCard(state = true) {
+        if (this.cards.length == 0) return false
+        let card = this.cards[this.cards.length - 1];
+        let r = card.revealed;
+        card.revealed = state;
+        return !r;
     }
 
     render() {
@@ -461,13 +496,14 @@ class Pile {
 }
 
 class Button {
-    constructor(x, y, w, h, text) {
+    constructor(x, y, w, h, text, color) {
         this.x = x;
         this.y = y;
         this.w = w;
         this.h = h;
         this.clicked = null;
         this.text = text;
+        this.color = color;
     }
 
     setClickEvent(f) {
@@ -483,7 +519,7 @@ class Button {
     }
 
     render() {
-        fill("#FAD7A0");
+        fill(this.color);
         rect(this.x, this.y, this.w, this.h);
         fill("black");
         textAlign(CENTER);
