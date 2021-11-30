@@ -321,6 +321,17 @@ function renderPiles() {
     // Revealed deck (flipped pile)
     deckFlippedPile.render();
 
+    // Dragging Cards
+    if (cursorCard) {
+        // Get cards in cursor pile without mutating the original pile
+        let cursorCardsPile = cursorCardPile.popUntil(cursorCard);
+        cursorCardPile.addCards(cursorCardsPile);
+        for (let i = 0; i < cursorCardsPile.length; i++) {
+            let card = cursorCardsPile[i]
+            if (!card) debugger;
+            drawCard(card, mouseX - cursorCardX, mouseY - cursorCardY + cardPaddingY * i);
+        }
+    }
 }
 
 class Pile {
@@ -381,8 +392,6 @@ class Pile {
                     if (this.cards.length > 1) {
                         drawCard(this.cards[this.cards.length - 2], this.x, this.y)
                     }
-                    // Add offsets here
-                    drawCard(card, mouseX - cursorCardX, mouseY - cursorCardY);
                 }
             }
             return;
@@ -396,8 +405,7 @@ class Pile {
             if (!card.dragging) {
                 drawCard(card, this.x, this.y + cardPaddingY * i);
             } else {
-                // Add offsets here
-                drawCard(card, mouseX - cursorCardX, mouseY - cursorCardY);
+                break;
             }
         }
     }
