@@ -160,7 +160,8 @@ function handleMouse() {
     if (!mouseIsPressed && cursorCard) {
         if (pile) {
             if (pile.layout == "fan" && doesCardFitOnPile(cursorCard, card)
-                || pile.layout == "pile" && doesCardFitOnAcePile(cursorCard, card)) {
+                || (pile.layout == "pile" && doesCardFitOnAcePile(cursorCard, card)
+                    && cursorCardPile.getUntil(cursorCard).length == 1)) {
                 let cards = cursorCardPile.popUntil(cursorCard);
                 pile.addCards(cards);
                 cursorCardPile.revealLastCard();
@@ -324,8 +325,7 @@ function renderPiles() {
     // Dragging Cards
     if (cursorCard) {
         // Get cards in cursor pile without mutating the original pile
-        let cursorCardsPile = cursorCardPile.popUntil(cursorCard);
-        cursorCardPile.addCards(cursorCardsPile);
+        let cursorCardsPile = cursorCardPile.getUntil(cursorCard);
         for (let i = 0; i < cursorCardsPile.length; i++) {
             let card = cursorCardsPile[i]
             if (!card) debugger;
@@ -355,11 +355,13 @@ class Pile {
     }
 
     popUntil(card) {
-        let cards = []
-        while (cards[cards.length - 1] != card) {
-            cards.push(this.popCard())
-        }
-        return reverse(cards)
+        let i = this.cards.indexOf(card);
+        return this.cards.splice(i);
+    }
+
+    getUntil(card) {
+        let i = this.cards.indexOf(card);
+        return this.cards.slice(i);
     }
 
     popCards(n) {
