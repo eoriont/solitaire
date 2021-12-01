@@ -137,8 +137,8 @@ function undoMove() {
         let move = moves.pop();
         let mtype = move.type;
         if (mtype == "deck") {
-            if (deck.cards.length == 0) {
-                deck.addCards(deckFlippedPile.popCards(deckFlippedPile.cards.length));
+            if (deckFlippedPile.cards.length == 0) {
+                deckFlippedPile.addCards(deck.popCards(deck.cards.length));
             } else {
                 deck.addCards(deckFlippedPile.popCards(3));
             }
