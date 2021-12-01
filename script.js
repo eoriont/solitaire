@@ -17,6 +17,10 @@ var won;
 
 var score, movesNum;
 
+
+// Game
+
+
 function createDeck() {
     let deck = [];
     for (let i = 0; i < 13; i++) {
